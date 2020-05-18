@@ -1,0 +1,41 @@
+#!/bin/sh
+
+echo "Cleaning files from previous runs from this script."
+
+rm -iv /etc/portage/env/mingw_pthreads
+rm -iv /etc/portage/env/mingw_pthreads_dwarf2
+rm -iv /etc/portage/package.use/mingw64-runtime-libraries
+rm -iv /etc/portage/package.env/mingw-gcc
+
+echo -e "\nRunning 'crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32'"
+crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32 || exit 1
+echo -e "\nRunning 'crossdev -S --libc "~7.0.0" -t i686-w64-mingw32'"
+crossdev -S --libc "~7.0.0" -t i686-w64-mingw32 || exit 1
+
+echo -e "\nAdding pthread settings to /etc/portage/env/mingw_pthreads."
+echo "EXTRA_ECONF=\"--enable-threads=posix\"" > /etc/portage/env/mingw_pthreads
+
+echo -e "\nAdding pthread and dwarf2 exeption handling settings to /etc/portage/env/mingw_pthreads_dwarf2"
+echo "EXTRA_ECONF=\"--enable-threads=posix --disable-sjlj-exceptions --with-dwarf2\"" > /etc/portage/env/mingw_pthreads_dwarf2
+
+echo -e "\nEnabling 'mingw_pthreads' for cross-x86_64-w64-mingw32/gcc,"
+echo "and 'mingw_pthreads_dwarf2' for cross-i686-w64-mingw32/gcc."
+echo -e "cross-x86_64-w64-mingw32/gcc mingw_pthreads\ncross-i686-w64-mingw32/gcc mingw_pthreads_dwarf2" > /etc/portage/package.env/mingw-gcc
+
+echo -e "\nEnabling 'libraries' useflag for cross-x86_64-w64-mingw32/mingw64-runtime,"
+echo "and cross-i686-w64-mingw32/mingw64-runtime"
+echo -e "cross-x86_64-w64-mingw32/mingw64-runtime libraries\ncross-i686-w64-mingw32/mingw64-runtime libraries" > /etc/portage/package.use/mingw64-runtime-libraries
+
+echo -e "\nRe-emerging mingw64-runtime"
+
+emerge -1v cross-x86_64-w64-mingw32/mingw64-runtime cross-i686-w64-mingw32/mingw64-runtime || exit 1
+
+echo -e "\nRe-emerging gcc"
+
+emerge -1v cross-x86_64-w64-mingw32/gcc cross-i686-w64-mingw32/gcc | exit 1
+
+echo -e "\nAt this point you should now have x86_64-w64-mingw32-gcc,"
+echo "and i686-w64-mingw32-gcc available."
+echo -e "\nPlease verify that 'x86_64-w64-mingw32-gcc -v' contains"
+echo "'--enable-posix=threads', and that 'i686-w64-mingw32-gcc -v' contains"
+echo "'--enable-posix=threads', '--disable-sjlj-exceptions', and '--with-dwarf2'."

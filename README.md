@@ -1,7 +1,5 @@
 # A Mingw64 toolchain script for Gentoo (WIP)
 
-TODO: Actually finish the script.
-
 With the official removal of the ability to build DXVK with winelib, and with Wine slowly integrating PE DLLs.  A Mingw64 toolchain is starting to become a requirement to build DXVK, and possibly future Wine versions.
 
 Unfortunatly for Gentoo users getting a working Mingw64 cross-compiler with pthread support is a pretty complex process. This script will try to help make this process a little easier.
