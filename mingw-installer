@@ -1,41 +1,68 @@
 #!/bin/sh
 
-echo "Cleaning files from previous runs from this script."
+cleanup() {
+    echo "Cleaning files from previous runs from this script."
 
-rm -iv /etc/portage/env/mingw_pthreads
-rm -iv /etc/portage/env/mingw_pthreads_dwarf2
-rm -iv /etc/portage/package.use/mingw64-runtime-libraries
-rm -iv /etc/portage/package.env/mingw-gcc
+    rm -v /etc/portage/env/mingw_pthreads
+    rm -v /etc/portage/env/mingw_pthreads_dwarf2
+    rm -v /etc/portage/package.use/mingw64-runtime-libraries
+    rm -v /etc/portage/package.env/mingw-gcc
+}
 
-echo "\nRunning 'crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32'"
-crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32 || exit 1
-echo "\nRunning 'crossdev -S --libc "~7.0.0" -t i686-w64-mingw32'"
-crossdev -S --libc "~7.0.0" -t i686-w64-mingw32 || exit 1
+run_crossdev() {
+    echo "\nRunning 'crossdev -S --libc \"~7.0.0\" -t x86_64-w64-mingw32'"
+    crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32 || exit 1
+    echo "\nRunning 'crossdev -S --libc \"~7.0.0\" -t i686-w64-mingw32'"
+    crossdev -S --libc "~7.0.0" -t i686-w64-mingw32 || exit 1
+}
 
-echo "\nAdding pthread settings to /etc/portage/env/mingw_pthreads."
-echo "EXTRA_ECONF=\"--enable-threads=posix\"" > /etc/portage/env/mingw_pthreads
+portage_config() {
+    echo
+    echo "Adding pthread settings to /etc/portage/env/mingw_pthreads."
+    echo "EXTRA_ECONF=\"--enable-threads=posix\"" > /etc/portage/env/mingw_pthreads
 
-echo "\nAdding pthread and dwarf2 exeption handling settings to /etc/portage/env/mingw_pthreads_dwarf2"
-echo "EXTRA_ECONF=\"--enable-threads=posix --disable-sjlj-exceptions --with-dwarf2\"" > /etc/portage/env/mingw_pthreads_dwarf2
+    echo
+    echo "Adding pthread and dwarf2 exeption handling settings to /etc/portage/env/mingw_pthreads_dwarf2"
+    echo "EXTRA_ECONF=\"--enable-threads=posix --disable-sjlj-exceptions --with-dwarf2\"" > /etc/portage/env/mingw_pthreads_dwarf2
 
-echo "\nEnabling 'mingw_pthreads' for cross-x86_64-w64-mingw32/gcc,"
-echo "and 'mingw_pthreads_dwarf2' for cross-i686-w64-mingw32/gcc."
-echo "cross-x86_64-w64-mingw32/gcc mingw_pthreads\ncross-i686-w64-mingw32/gcc mingw_pthreads_dwarf2" > /etc/portage/package.env/mingw-gcc
+    echo
+    echo "Enabling 'mingw_pthreads' for cross-x86_64-w64-mingw32/gcc,"
+    echo "and 'mingw_pthreads_dwarf2' for cross-i686-w64-mingw32/gcc."
+    echo "cross-x86_64-w64-mingw32/gcc mingw_pthreads" > /etc/portage/package.env/mingw-gcc
+    echo "cross-i686-w64-mingw32/gcc mingw_pthreads_dwarf2" >> /etc/portage/package.env/mingw-gcc
 
-echo "\nEnabling 'libraries' useflag for cross-x86_64-w64-mingw32/mingw64-runtime,"
-echo "and cross-i686-w64-mingw32/mingw64-runtime"
-echo "cross-x86_64-w64-mingw32/mingw64-runtime libraries\ncross-i686-w64-mingw32/mingw64-runtime libraries" > /etc/portage/package.use/mingw64-runtime-libraries
+    echo
+    echo "Enabling 'libraries' useflag for cross-x86_64-w64-mingw32/mingw64-runtime,"
+    echo "and cross-i686-w64-mingw32/mingw64-runtime"
+    echo "cross-x86_64-w64-mingw32/mingw64-runtime libraries" > /etc/portage/package.use/mingw64-runtime-libraries
+    echo "cross-i686-w64-mingw32/mingw64-runtime libraries" >> /etc/portage/package.use/mingw64-runtime-libraries
+}
 
-echo "\nRe-emerging mingw64-runtime"
+remerge() {
+    echo
+    echo "Re-emerging mingw64-runtime"
 
-emerge -1v cross-x86_64-w64-mingw32/mingw64-runtime cross-i686-w64-mingw32/mingw64-runtime || exit 1
+    emerge -1v cross-x86_64-w64-mingw32/mingw64-runtime cross-i686-w64-mingw32/mingw64-runtime || exit 1
 
-echo "\nRe-emerging gcc"
+    echo
+    echo "Re-emerging gcc"
 
-emerge -1v cross-x86_64-w64-mingw32/gcc cross-i686-w64-mingw32/gcc | exit 1
+    emerge -1v cross-x86_64-w64-mingw32/gcc cross-i686-w64-mingw32/gcc || exit 1
+}
 
-echo "\nAt this point you should now have x86_64-w64-mingw32-gcc,"
-echo "and i686-w64-mingw32-gcc available."
-echo "\nPlease verify that 'x86_64-w64-mingw32-gcc -v' contains"
-echo "'--enable-posix=threads', and that 'i686-w64-mingw32-gcc -v' contains"
-echo "'--enable-posix=threads', '--disable-sjlj-exceptions', and '--with-dwarf2'."
+finished_msg() {
+    echo
+    echo "At this point you should now have x86_64-w64-mingw32-gcc,"
+    echo "and i686-w64-mingw32-gcc available."
+    echo
+    echo "Please verify that 'x86_64-w64-mingw32-gcc -v' contains"
+    echo "'--enable-posix=threads', and that 'i686-w64-mingw32-gcc -v' contains"
+    echo "'--enable-posix=threads', '--disable-sjlj-exceptions', and '--with-dwarf2'."
+}
+
+# Start of Script
+cleanup
+run_crossdev
+portage_config
+remerge
+finished_msg
