@@ -8,7 +8,7 @@ The script will do the following.
 
 * Remove files that were previously created by this script.
 
-* Use crossdev to create x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
+* Use crossdev to create stable versions of the x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
 
 * Add pthread, and dwarf2, EXTRA\_ECONF options to /etc/portage/env.
 
