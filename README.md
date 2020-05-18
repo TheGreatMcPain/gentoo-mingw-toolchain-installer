@@ -8,18 +8,14 @@ The script will do the following.
 
 * Remove files that were previously created by this script.
 
-* Run `crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32`
+* Use crossdev to create x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
 
-* Run `crossdev -S --libc "~7.0.0" -t i686-w64-mingw32`
+* Add pthread, and dwarf2, EXTRA\_ECONF options to /etc/portage/env.
 
-* Run `echo "EXTRA_ECONF=\"--enable-threads=posix\"" > /etc/portage/env/mingw_pthreads`
+* Enable libraries useflag for mingw64-runtime.
 
-* Run `echo "EXTRA_ECONF=\"--enable-threads=posix --disable-sjlj-exceptions --with-dwarf2\"" > /etc/portage/env/mingw_pthreads_dwarf2`
+* Apply /etc/portage/env settings to mingw cross-{x86\_64-w64,i686}-mingw32/gcc packages.
 
-* Run `echo -e "cross-x86_64-w64-mingw32/mingw64-runtime libraries\ncross-i686-w64-mingw32/mingw64-runtime libraries" > /etc/portage/package.use/mingw64-runtime-libraries`
+* Re-build mingw64-runtime with the libraries useflag
 
-* Run `echo -e "cross-x86_64-w64-mingw32/gcc mingw_pthreads\ncross-x86_64-w64-mingw32/gcc mingw_pthreads_dwarf2" > /etc/portage/package.env/mingw-gcc`
-
-* Run `emerge -1v cross-x86_64-w64-mingw32/mingw64-runtime cross-i686-w64-mingw32/mingw64-runtime`
-
-* Run `emerge -1v cross-x86_64-w64-mingw32/gcc cross-i686-w64-mingw32/gcc`
+* Re-build cross-{x86\_64-w64,i686}-mingw32/gcc with the EXTRA\_ECONF settings.
