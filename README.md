@@ -4,11 +4,14 @@ With the removal of the ability to build DXVK with winelib, and with Wine slowly
 
 Unfortunatly for Gentoo users getting a working Mingw64 cross-compiler with pthread support is a pretty complex process. This script will try to help make this process a little easier.
 
-The script will do the following.
+### The script will do the following.
 
-* Remove files that were previously created by this script.
+* Remove files that were previously created by this script.\
+  (Files that could cause crossdev to fail.)
 
-* Use crossdev to create stable versions of the x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
+* Download binutils 2.34 patch if creating an unstable toolchain.
+
+* Use crossdev to create x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
 
 * Add pthread, and dwarf2, EXTRA\_ECONF options to /etc/portage/env.
 
@@ -19,3 +22,11 @@ The script will do the following.
 * Re-build mingw64-runtime with the libraries useflag
 
 * Re-build cross-{x86\_64-w64,i686}-mingw32/gcc with the EXTRA\_ECONF settings.
+
+## Usage
+
+| Argument | Usage |
+|:--------:| ----- |
+| -h | Print help message |
+| --unstable | Create toolchain with unstable versions of 'binutils/mingw64-runtime/gcc'. |
+| --crossdev-opts "options" | Pass custom options to crossdev. Ex: --crossdev-opts "-S --libc ~7.0.0" |

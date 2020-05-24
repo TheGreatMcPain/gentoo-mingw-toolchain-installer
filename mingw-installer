@@ -1,5 +1,36 @@
 #!/bin/sh
 
+usage() {
+    echo "Usage: # $0 <options>"
+    echo
+    echo "    -h:  Print this message."
+    echo
+    echo "    --unstable:  Build toolchain using the latest versions"
+    echo "                 of binutils/mingw64-runtime/gcc."
+    echo "                 (We'll also apply a patch to fix DXVK and binutils 2.34)"
+    echo
+    echo "    --crossdev-opts \"options\":  Custom options for crossdev."
+    echo "                                  Ex: <# $0 --crossdev-opts \"-S --libc ~7.0.0\">"
+}
+
+unset UNSTABLE
+unset CROSSDEV_OPTS
+
+# Parse arguments
+if [ $1 = "-h" ]; then
+    usage
+    exit
+elif [ $1 = "--unstable" ]; then
+    UNSTABLE="yes"
+elif [ $1 = "--crossdev-opts" ]; then
+    CROSSDEV_OPTS="$2"
+elif ! [ -z $1 ]; then
+    echo "$1 Option not found"
+    echo
+    usage
+    exit
+fi
+
 cleanup() {
     echo "Cleaning files from previous runs from this script."
 
@@ -9,11 +40,46 @@ cleanup() {
     rm -v /etc/portage/package.env/mingw-gcc
 }
 
+binutils_patch() {
+    APPLY="no"
+    if [ $UNSTABLE = "yes" ]; then
+        APPLY="yes"
+    elif ! [ -z $CROSSDEV_OPTS ]; then
+        # Assume 2.34 is binutils
+        case "$CROSSDEV_OPTS" in
+            *2.34*) APPLY="yes" ;;
+        esac
+    fi
+
+    if [ $APPLY = "yes" ]; then
+        echo "Creating /etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34"
+        mkdir -pv "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34"
+
+        echo "Symlinking /etc/portage/patches/cross-i686-w64-mingw32 to cross-x86_64-w64-mingw32"
+        ln -sfv "/etc/portage/patches/cross-x86_64-w64-mingw32" \
+            "/etc/portage/patches/cross-i686-w64-mingw32"
+
+        echo "Downloading binutils 2.34 patch"
+        wget "https://sourceware.org/bugzilla/attachment.cgi?id=12545&format=raw" \
+            -O "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34/fix-dxvk-crash.patch"
+    else
+        echo "Skipping binutils 2.34 patch"
+    fi
+}
+
 run_crossdev() {
-    echo "\nRunning 'crossdev -S --libc \"~7.0.0\" -t x86_64-w64-mingw32'"
-    crossdev -S --libc "~7.0.0" -t x86_64-w64-mingw32 || exit 1
-    echo "\nRunning 'crossdev -S --libc \"~7.0.0\" -t i686-w64-mingw32'"
-    crossdev -S --libc "~7.0.0" -t i686-w64-mingw32 || exit 1
+    if [ -z $CROSSDEV_OPTS ]; then
+        if [ $UNSTABLE = "yes" ]; then
+            CROSSDEV_OPTS=""
+        else
+            CROSSDEV_OPTS="-S --libc ~7.0.0"
+        fi
+    fi
+
+    echo "\nRunning 'crossdev $CROSSDEV_OPTS -t x86_64-w64-mingw32'"
+    crossdev "$CROSSDEV_OPTS" -t x86_64-w64-mingw32 || exit 1
+    echo "\nRunning 'crossdev $CROSSDEV_OPTS -t i686-w64-mingw32'"
+    crossdev "$CROSSDEV_OPTS" -t i686-w64-mingw32 || exit 1
 }
 
 portage_config() {
@@ -62,6 +128,7 @@ finished_msg() {
 
 # Start of Script
 cleanup
+binutils_patch
 run_crossdev
 portage_config
 remerge
