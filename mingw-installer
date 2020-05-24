@@ -42,9 +42,9 @@ cleanup() {
 
 binutils_patch() {
     APPLY="no"
-    if [ $UNSTABLE = "yes" ]; then
+    if [ "$UNSTABLE"x = "yes"x ]; then
         APPLY="yes"
-    elif ! [ -z $CROSSDEV_OPTS ]; then
+    elif ! [ "$CROSSDEV_OPTS"x = ""x ]; then
         # Assume 2.34 is binutils
         case "$CROSSDEV_OPTS" in
             *2.34*) APPLY="yes" ;;
@@ -68,18 +68,30 @@ binutils_patch() {
 }
 
 run_crossdev() {
-    if [ -z $CROSSDEV_OPTS ]; then
-        if [ $UNSTABLE = "yes" ]; then
+    if [ "$CROSSDEV_OPTS"x = ""x ]; then
+        if [ "$UNSTABLE"x = "yes"x ]; then
             CROSSDEV_OPTS=""
         else
             CROSSDEV_OPTS="-S --libc ~7.0.0"
         fi
+    else
+        # If '--libc' is not in CROSSDEV_OPTS then append it.
+        case "$CROSSDEV_OPTS" in
+            *--libc*) LIBC="yes" ;;
+            *--l*) LIBC="yes" ;;
+        esac
+        if ! [ "$LIBC"x = "yes"x ]; then
+            CROSSDEV_OPTS="$CROSSDEV_OPTS --libc ~7.0.0"
+        fi
     fi
 
+    # Portage may complain if this are set in your profile, so lets unset them.
+    unset XDG_CACHE_HOME DISTCC_DIR CCACHE_DIR CCACHE_CONFIGPATH WGETRC
+
     echo "\nRunning 'crossdev $CROSSDEV_OPTS -t x86_64-w64-mingw32'"
-    crossdev "$CROSSDEV_OPTS" -t x86_64-w64-mingw32 || exit 1
+    eval crossdev "$CROSSDEV_OPTS" -t x86_64-w64-mingw32 || exit 1
     echo "\nRunning 'crossdev $CROSSDEV_OPTS -t i686-w64-mingw32'"
-    crossdev "$CROSSDEV_OPTS" -t i686-w64-mingw32 || exit 1
+    eval crossdev "$CROSSDEV_OPTS" -t i686-w64-mingw32 || exit 1
 }
 
 portage_config() {
