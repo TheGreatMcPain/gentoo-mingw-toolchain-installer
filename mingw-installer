@@ -52,14 +52,18 @@ binutils_patch() {
     fi
 
     if [ $APPLY = "yes" ]; then
+        echo
         echo "Creating /etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34"
+        echo
         mkdir -pv "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34"
-
+        echo
         echo "Symlinking /etc/portage/patches/cross-i686-w64-mingw32 to cross-x86_64-w64-mingw32"
+        echo
         ln -sfv "/etc/portage/patches/cross-x86_64-w64-mingw32" \
             "/etc/portage/patches/cross-i686-w64-mingw32"
-
+        echo
         echo "Downloading binutils 2.34 patch"
+        echo
         wget "https://sourceware.org/bugzilla/attachment.cgi?id=12545&format=raw" \
             -O "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34/fix-dxvk-crash.patch"
     else
