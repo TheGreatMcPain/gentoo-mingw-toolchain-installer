@@ -59,13 +59,17 @@ binutils_patch() {
         echo
         mkdir -pv "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34-r1"
         cd "/etc/portage/patches/cross-x86_64-w64-mingw32"
-        ln -sfv "binutils-2.34-r1" "binutils-2.34"
+        if ! [ -L "binutils-2.34" ]; then
+            ln -sfv "binutils-2.34-r1" "binutils-2.34"
+        fi
         cd "$oldpath"
         echo
         echo "Symlinking /etc/portage/patches/cross-i686-w64-mingw32 to cross-x86_64-w64-mingw32"
         echo
         cd "/etc/portage/patches"
-        ln -sfv "cross-x86_64-w64-mingw32" "cross-i686-w64-mingw32"
+        if ! [ -L "cross-i686-w64-mingw32" ]; then
+            ln -sfv "cross-x86_64-w64-mingw32" "cross-i686-w64-mingw32"
+        fi
         cd "$oldpath"
         echo
         echo "Downloading binutils 2.34 patch"
