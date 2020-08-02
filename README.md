@@ -9,8 +9,6 @@ Unfortunatly for Gentoo users getting a working Mingw64 cross-compiler with pthr
 * Remove files that were previously created by this script.\
   (Files that could cause crossdev to fail.)
 
-* Download binutils 2.34 patch if creating an unstable toolchain.
-
 * Use crossdev to create x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
 
 * Add pthread, and dwarf2, EXTRA\_ECONF options to /etc/portage/env.

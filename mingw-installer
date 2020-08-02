@@ -7,7 +7,6 @@ usage() {
     echo
     echo "    --unstable:  Build toolchain using the latest versions"
     echo "                 of binutils/mingw64-runtime/gcc."
-    echo "                 (We'll also apply a patch to fix DXVK and binutils 2.34)"
     echo
     echo "    --crossdev-opts \"options\":  Custom options for crossdev."
     echo "                                  Ex: <# $0 --crossdev-opts \"-S --libc ~7.0.0\">"
@@ -38,47 +37,6 @@ cleanup() {
     rm -v /etc/portage/env/mingw_pthreads_dwarf2
     rm -v /etc/portage/package.use/mingw64-runtime-libraries
     rm -v /etc/portage/package.env/mingw-gcc
-}
-
-binutils_patch() {
-    APPLY="no"
-    if [ "$UNSTABLE"x = "yes"x ]; then
-        APPLY="yes"
-    elif ! [ "$CROSSDEV_OPTS"x = ""x ]; then
-        # Assume 2.34 is binutils
-        case "$CROSSDEV_OPTS" in
-            *2.34*) APPLY="yes" ;;
-        esac
-    fi
-
-    if [ $APPLY = "yes" ]; then
-        oldpath=`pwd`
-        echo
-        echo "Creating /etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34-r1,"
-        echo "and symlinking binutils-2.34-r1 to binutils-2.34"
-        echo
-        mkdir -pv "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34-r1"
-        cd "/etc/portage/patches/cross-x86_64-w64-mingw32"
-        if ! [ -L "binutils-2.34" ]; then
-            ln -sfv "binutils-2.34-r1" "binutils-2.34"
-        fi
-        cd "$oldpath"
-        echo
-        echo "Symlinking /etc/portage/patches/cross-i686-w64-mingw32 to cross-x86_64-w64-mingw32"
-        echo
-        cd "/etc/portage/patches"
-        if ! [ -L "cross-i686-w64-mingw32" ]; then
-            ln -sfv "cross-x86_64-w64-mingw32" "cross-i686-w64-mingw32"
-        fi
-        cd "$oldpath"
-        echo
-        echo "Downloading binutils 2.34 patch"
-        echo
-        wget "https://sourceware.org/bugzilla/attachment.cgi?id=12545&format=raw" \
-            -O "/etc/portage/patches/cross-x86_64-w64-mingw32/binutils-2.34-r1/fix-dxvk-crash.patch"
-    else
-        echo "Skipping binutils 2.34 patch"
-    fi
 }
 
 run_crossdev() {
@@ -154,7 +112,6 @@ finished_msg() {
 
 # Start of Script
 cleanup
-binutils_patch
 run_crossdev
 portage_config
 remerge
