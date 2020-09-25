@@ -1,0 +1,57 @@
+#!/bin/sh
+##################
+#
+# commands to run
+# 
+# crossdev x86_64-w64-mingw32
+#
+# crossdev --lenv USE="libraries" -t x86_64-w64-mingw32
+#
+# crossdev --lenv USE="libraries" --genv EXTRA_ECONF="--enable-threads=posix" -t x86_64-w64-mingw32
+# or
+# crossdev --lenv USE="libraries" --genv EXTRA_ECONF="--enable-threads=posix --disable-sjlj-exceptions --with-dwarf2" -t i686-w64-mingw32
+#
+##################
+
+TARGETS="x86_64-w64-mingw32 i686-w64-mingw32"
+
+build_toolchain() {
+    TARGET=$1
+
+    GCC_GRAPHITE="no"
+
+    if [ "$2"x = "yes"x ]; then
+        GCC_GRAPHITE="yes"
+    fi
+
+    # Create initial toolchain
+    crossdev -t $TARGET
+
+    # Disable sjlj for 32bit, but enable dwarf2. (Extra performance for 32bit DXVK)
+    if [ $TARGET = "i686-w64-mingw32" ]; then
+        GCC_ENV="EXTRA_ECONF=\"--enable-threads=posix"
+        GCC_ENV="$GCC_ENV --disable-sjlj-exceptions --with-dwarf2\""
+    else
+        GCC_ENV="EXTRA_ECONF=\"--enable-threads=posix\""
+    fi
+
+    # If GCC_GRAPHITE is 'yes' then enable the graphite USE for gcc
+    if [ $GCC_GRAPHITE = "yes" ]; then
+        GCC_USE="USE=\"graphite\""
+    else
+        GCC_USE=""
+    fi
+
+    # Enable 'libraries' for mingw64-runtime, and enable threading in gcc.
+    crossdev --lenv 'USE="libraries"' --genv "$GCC_USE $GCC_ENV" --init-target -t $TARGET
+
+    # Rebuild mingw64-runtime with libraries USE
+    emerge -1 --quiet-build y cross-$TARGET/mingw64-runtime
+
+    # Rebuild gcc with threading.
+    emerge -1 --quiet-build y cross-$TARGET/gcc
+}
+
+for x in $TARGETS; do
+    build_toolchain $x "yes"
+done
