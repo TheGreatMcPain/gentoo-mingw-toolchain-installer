@@ -1,33 +1,51 @@
 #!/bin/sh
-##################
-#
-# commands to run
-# 
-# crossdev x86_64-w64-mingw32
-#
-# crossdev --lenv USE="libraries" -t x86_64-w64-mingw32
-#
-# crossdev --lenv USE="libraries" --genv EXTRA_ECONF="--enable-threads=posix" -t x86_64-w64-mingw32
-# or
-# crossdev --lenv USE="libraries" --genv EXTRA_ECONF="--enable-threads=posix --disable-sjlj-exceptions --with-dwarf2" -t i686-w64-mingw32
-#
-##################
+
+stable="no"
+graphite="no"
+
+usage() {
+    printf "Usage: $0 -h,-s\n\n"
+    printf "    -h :    Print this help message.\n\n"
+    printf "    -s :    Build stable toolchain.\n\n"
+    printf "    -g :    Enable 'graphite' USE for gcc.\n\n"
+}
+
+while getopts "sgh" params; do
+    case $params in
+        s)  stable="yes";;
+        g)  graphite="yes";;
+        h)  usage
+            exit;;
+    esac
+done
+
+if [ "$1"x = "x" ]; then
+    usage
+    exit 1
+fi
 
 TARGETS="x86_64-w64-mingw32 i686-w64-mingw32"
 
+# build_toolchain target ("yes" for graphite) ("yes" for stable)
 build_toolchain() {
     TARGET=$1
 
     GCC_GRAPHITE="no"
+    CROSSDEV_CMD="crossdev"
 
     if [ "$2"x = "yes"x ]; then
         GCC_GRAPHITE="yes"
     fi
 
-    # Create initial toolchain
-    crossdev -t $TARGET
+    if [ "$3"x = "yes"x ]; then
+        CROSSDEV_CMD="crossdev -S -libc ~7.0.0"
+    fi
 
-    # Disable sjlj for 32bit, but enable dwarf2. (Extra performance for 32bit DXVK)
+    # Create initial toolchain
+    $CROSSDEV_CMD -t $TARGET
+
+    # Disable sjlj for 32bit, but enable dwarf2.
+    # (Extra performance for 32bit DXVK)
     if [ $TARGET = "i686-w64-mingw32" ]; then
         GCC_ENV="EXTRA_ECONF=\"--enable-threads=posix"
         GCC_ENV="$GCC_ENV --disable-sjlj-exceptions --with-dwarf2\""
@@ -43,7 +61,8 @@ build_toolchain() {
     fi
 
     # Enable 'libraries' for mingw64-runtime, and enable threading in gcc.
-    crossdev --lenv 'USE="libraries"' --genv "$GCC_USE $GCC_ENV" --init-target -t $TARGET
+    $CROSSDEV_CMD --lenv 'USE="libraries"' \
+        --genv "$GCC_USE $GCC_ENV" --init-target -t $TARGET
 
     # Rebuild mingw64-runtime with libraries USE
     emerge -1 --quiet-build y cross-$TARGET/mingw64-runtime
@@ -53,5 +72,5 @@ build_toolchain() {
 }
 
 for x in $TARGETS; do
-    build_toolchain $x "yes"
+    build_toolchain $x $graphite $stable
 done
