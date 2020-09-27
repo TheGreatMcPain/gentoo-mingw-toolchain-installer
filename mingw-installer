@@ -38,7 +38,7 @@ build_toolchain() {
     fi
 
     if [ "$3"x = "yes"x ]; then
-        CROSSDEV_CMD="crossdev -S -libc ~7.0.0"
+        CROSSDEV_CMD="crossdev -S --libc ~7.0.0"
     fi
 
     # Create initial toolchain
