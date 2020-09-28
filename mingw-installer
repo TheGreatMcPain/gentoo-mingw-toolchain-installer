@@ -42,18 +42,18 @@ build_toolchain() {
     TARGET=$1
 
     GCC_GRAPHITE="no"
-    CROSSDEV_CMD="crossdev"
+    CROSSDEV_OPTS=
 
     if [ "$2"x = "yes"x ]; then
         GCC_GRAPHITE="yes"
     fi
 
     if [ "$3"x = "yes"x ]; then
-        CROSSDEV_CMD="crossdev -S --libc ~7.0.0"
+        CROSSDEV_OPTS="-S --libc ~7.0.0-r1"
     fi
 
     # Create initial toolchain
-    $CROSSDEV_CMD -t $TARGET
+    crossdev $CROSSDEV_OPTS -t $TARGET
 
     # Disable sjlj for 32bit, but enable dwarf2.
     # (Extra performance for 32bit DXVK)
@@ -72,14 +72,14 @@ build_toolchain() {
     fi
 
     # Enable 'libraries' for mingw64-runtime, and enable threading in gcc.
-    $CROSSDEV_CMD --lenv 'USE="libraries"' \
+    crossdev $CROSSDEV_OPTS --lenv 'USE="libraries"' \
         --genv "$GCC_USE $GCC_ENV" --init-target -t $TARGET
 
     # Rebuild mingw64-runtime with libraries USE
-    emerge -1 --quiet-build y cross-$TARGET/mingw64-runtime
+    emerge -1 --quiet-build y cross-$TARGET/mingw64-runtime || exit 1
 
     # Rebuild gcc with threading.
-    emerge -1 --quiet-build y cross-$TARGET/gcc
+    emerge -1 --quiet-build y cross-$TARGET/gcc || exit 1
 }
 
 for x in $TARGETS; do
