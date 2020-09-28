@@ -2,20 +2,23 @@
 
 stable="no"
 graphite="no"
+target=""
 
 usage() {
-    printf "Usage: $0 -h,-s\n\n"
+    printf "Usage: $0 -h,-s,-g -t 32,64, or both\n\n"
     printf "    -h :    Print this help message.\n\n"
+    printf "    -t <32,64,both> :   Which targets to build (required).\n\n"
     printf "    -s :    Build stable toolchain.\n\n"
     printf "    -g :    Enable 'graphite' USE for gcc.\n\n"
 }
 
-while getopts "sgh" params; do
+while getopts "sght:" params; do
     case $params in
         s)  stable="yes";;
         g)  graphite="yes";;
         h)  usage
             exit;;
+        t)  target="$OPTARG";;
     esac
 done
 
@@ -24,7 +27,15 @@ if [ "$1"x = "x" ]; then
     exit 1
 fi
 
-TARGETS="x86_64-w64-mingw32 i686-w64-mingw32"
+if [ $target = "32" ]; then
+    TARGETS="i686-w64-mingw32"
+elif [ $target = "64" ]; then
+    TARGETS="x86_64-w64-mingw32"
+elif [ $target = "both" ]; then
+    TARGETS="x86_64-w64-mingw32 i686-w64-mingw32"
+else
+    echo "'$target' Is not a valid option."
+fi
 
 # build_toolchain target ("yes" for graphite) ("yes" for stable)
 build_toolchain() {
