@@ -20,3 +20,29 @@ and set `--enable-threads=posix` for `gcc` also using `crossdev`.
 | -h | Print help message |
 | -s | Create stable versions of the toolchain. (default is latest available) |
 | -g | enable the `graphite` useflag for `gcc`. (For those using GentooLTO.) |
+
+## Binutils 2.35.1 patch
+
+There's currently a bug with dwarf2 that causes the 32bit version of dxvk to fail to build.
+
+See: [Gentoo bug #745372](https://bugs.gentoo.org/745372)
+
+The `binutils-2.35.1-fix-dxvk-build.patch` patch should fix it.
+
+Just create these directories in `/etc/portage/patches`
+
+```
+# cd /etc/portage/patches
+
+# mkdir -pv cross-x86_64-w64-mingw32/binutils-2.35.1
+
+# ln -sv cross-x86_64-w64-mingw32 cross-i686-w64-mingw32
+
+# cp -v /path/to/binutils-2.35.1-fix-dxvk-build.patch cross-x86_64-w64-mingw32/binutils-2.35.1/
+```
+
+Then rebuild mingw32's binutils.
+
+```
+# emerge -1va cross-{x86_64,i686}-w64-mingw32/binutils
+```
