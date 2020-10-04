@@ -6,25 +6,17 @@ Unfortunatly for Gentoo users getting a working Mingw64 cross-compiler with pthr
 
 ### The script will do the following.
 
-* Remove files that were previously created by this script.\
-  (Files that could cause crossdev to fail.)
+* Create mingw toolchains using `crossdev`
 
-* Use crossdev to create x86\_64-w64-mingw32, and i686-w64-mingw32 toolchains.
+* Enable the `libraries` useflag for `mingw64-runtime`,
+and set `--enable-threads=posix` for `gcc` also using `crossdev`.
 
-* Add pthread, and dwarf2, EXTRA\_ECONF options to /etc/portage/env.
-
-* Enable libraries useflag for mingw64-runtime.
-
-* Apply /etc/portage/env settings to mingw cross-{x86\_64-w64,i686}-mingw32/gcc packages.
-
-* Re-build mingw64-runtime with the libraries useflag
-
-* Re-build cross-{x86\_64-w64,i686}-mingw32/gcc with the EXTRA\_ECONF settings.
+* Rebuild `mingw64-runtime`, and `gcc`.
 
 ## Usage
 
 | Argument | Usage |
 |:--------:| ----- |
 | -h | Print help message |
-| --unstable | Create toolchain with unstable versions of 'binutils/mingw64-runtime/gcc'. |
-| --crossdev-opts "options" | Pass custom options to crossdev. Ex: --crossdev-opts "-S --libc ~7.0.0" |
+| -s | Create stable versions of the toolchain. (default is latest available) |
+| -g | enable the `graphite` useflag for `gcc`. (For those using GentooLTO.) |
