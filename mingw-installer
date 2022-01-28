@@ -49,7 +49,7 @@ build_toolchain() {
     fi
 
     if [ "$3"x = "yes"x ]; then
-        CROSSDEV_OPTS="-S --libc ~7.0.0-r1"
+        CROSSDEV_OPTS="-S"
     fi
 
     # Create initial toolchain
