@@ -75,6 +75,9 @@ build_toolchain() {
     crossdev $CROSSDEV_OPTS --lenv 'USE="libraries"' \
         --genv "$GCC_USE $GCC_ENV" --init-target -t $TARGET || exit 1
 
+    # Modify mingw64-runtime's useflags in package.use to enable libraries.
+    sed -i "s|-libraries|libraries|" /etc/portage/package.use/cross-$TARGET || exit 1
+
     # Rebuild mingw64-runtime with libraries USE
     emerge -1 --quiet-build y cross-$TARGET/mingw64-runtime || exit 1
 
